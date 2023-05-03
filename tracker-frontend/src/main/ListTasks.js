@@ -3,10 +3,21 @@ import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row'; 
 import Col from 'react-bootstrap/Col'; 
+import { useEffect } from 'react';
 
-const ListTasks = (props) => {    
+const ListTasks = (props) => {  
+      
+      useEffect(() => {
+            displayAlert();},[props.task]);
 
-    const ver = <span className = "version"> [Version:{props.version}]</span>;
+            const displayAlert = () => 
+            {
+                  if (props.task.name.trim().length > 0)
+                  {
+                        alert(props.week);
+                  }
+            }
+
     return (
         <Container className={props.className}>
         <Row className='App'>
