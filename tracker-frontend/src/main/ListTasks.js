@@ -3,23 +3,145 @@ import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row'; 
 import Col from 'react-bootstrap/Col'; 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import ListGroup from 'react-bootstrap/ListGroup';
 
 const ListTasks = (props) => {  
       
+      const [tasks, setTasks] = useState([]);
       useEffect(() => {
-            displayAlert();},[props.task]);
+      if (props.week.trim().length > 0)
+      {
+            const newTasks = updateMatchingRow ();
+            setTasks(newTasks);
+            // console.log('count:' + newTasks.length + ' ' + newTasks[0].name + ' ' + newTasks[0].hour + ' ' + newTasks[0].min + ' ' + newTasks[0].comment);
+                      
+      }
+      }, [props.task]);
 
-            const displayAlert = () => 
-            {
-                  if (props.task.name.trim().length > 0)
-                  {
-                        alert(props.week);
+      const updateMatchingRow = () =>
+      {
+             let newTasks = [...tasks];
+             let foundIt = false;
+             for (let i = 0; i < tasks.length; i++) {
+               if (newTasks[i].name.toUpperCase() == props.task.name.toUpperCase()) 
+               {
+                  newTasks[i] = copy(props.task);
+                  foundIt = true;
+                  break;
+               }
+             }
+             if (!foundIt && props.task.name.trim().length > 0)
+             {
+              newTasks = [copy(props.task), ...tasks]
+             }
+             return newTasks;
+         }
+
+         const copy = (task) =>
+          {
+            const copy = {};
+            copy.name =  task.name;
+            copy.hour = task.hour;
+            copy.min = task.min;
+            copy.comment = task.comment;
+            copy.myKey = task.myKey === 0 ? Date.now() : task.myKey;
+            return copy;
+          } 
+          
+          const [weekId, setWeekId] = useState(0);
+          
+          const save = (e) => {
+            const week = props.week;
+            const id = weekId !== "undefined" ? weekId : 0;
+          
+            fetch("http://localhost:8500/tracker/api/save", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ id, week, tasks }),  //Sending the request in the json format
+            })
+              .then((response) => {
+                if (response.ok) {
+                  return response.json();
+                }
+              })
+              .then((data) => {
+                   setWeekId(data);
+                  //  alert('It is working ' + data);
                   }
+                   )
+              .catch((error) => alert(error));
+          };
+
+          const load = (e) => {
+            if (
+              props.week == "" ||
+              props.week === "undefined" ||
+              props.week === null
+            ) {
+              alert("Please, Enter Date");
+              return;
             }
+            fetch(`http://localhost:8500/tracker/api/get?week=${props.week}`, {
+              method: "GET",
+              headers: {
+                accept: "application/json",
+              },
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                const { id, tasks } = data; //deconstruct
+                setTasks(tasks);               
+                if (id === 0 || id === null) {
+                  alert("Week doesn't exist.");
+                }
+                setWeekId(id);
+              })
+              .catch((error) => alert(error));
+          };
+
+          const close = (event) => {
+            save(event);
+            clear();
+          }
+
+          const clear = () =>
+          {
+            props.clearButtonRef.current.click();
+            setTasks([]);
+            setWeekId(0);
+            props.clearBoundedElements();
+          }
+
+          const[selectedRowHighlighted, setSelectedRowHighlighted] = useState('');
+    
 
     return (
+        
         <Container className={props.className}>
+
+        <div style={{ height: '260px', overflowY: 'scroll' }}>
+          <ListGroup>
+           {
+             tasks.map(
+                 (text, index) =>
+                   (<ListGroup.Item 
+                        style={
+                              {
+                                    fontWeight: selectedRowHighlighted === index ? 'bold' : 'normal', 
+                                    backgroundColor: selectedRowHighlighted === index ? 'cyan' : 'white'
+                              }
+                        }
+                        onDoubleClick={() => {props.populate(text); setSelectedRowHighlighted(index)}}
+                        key={index}>{text.name}-{text.hour}:{text.min}[{text.comment}] 
+                       </ListGroup.Item>)
+                 )
+            }
+         </ListGroup>
+       </div>
+
         <Row className='App'>
          <Col>
         <Button className="text-uppercase btn-outline-success  btn-sm gap"  variant='none' >
@@ -33,7 +155,7 @@ const ListTasks = (props) => {
         </Button>
         </Col>
         <Col>
-        <Button className="text-uppercase  btn-outline-dark  btn-sm gap" variant='none' >
+        <Button className="text-uppercase  btn-outline-dark  btn-sm gap" variant='none' onClick={save} >
                 save
               </Button>
               </Col>
@@ -43,13 +165,13 @@ const ListTasks = (props) => {
         </Button>
         </Col>
         <Col>
-         <Button className="text-uppercase btn-outline-primary  btn-sm gap"  variant='none' >
+         <Button className="text-uppercase btn-outline-primary  btn-sm gap"  variant='none' onClick={close}>
               close
         </Button>
         </Col>
   
         <Col>
-         <Button className="text-uppercase btn-outline-warning  btn-sm gap"  variant='none'>
+         <Button className="text-uppercase btn-outline-warning  btn-sm gap"  variant='none' onClick={load}>
               load
         </Button>
         </Col>

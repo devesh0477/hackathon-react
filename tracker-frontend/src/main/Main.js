@@ -10,6 +10,8 @@ import 'react-datepicker/dist/react-datepicker.css';
 import Form from 'react-bootstrap/Form';
 import { useState } from "react";
 import moment from 'moment';
+import { useRef } from "react";
+import $ from 'jquery';
 
 function Main() 
 {
@@ -79,6 +81,22 @@ function Main()
           return result;
         };
         
+        const clearButtonRef = useRef(null);
+
+        const clearBoundedElements = () =>
+        {
+          setSelectedDate('');
+          setName('');
+        }
+
+        const populate = (data) =>
+        {
+          setName(data.name);
+          $(`#formTaskHour`).val(data.hour);
+          $(`#formTaskMin`).val(data.min);
+          $(`#formTaskComment`).val(data.comment);
+          task.myKey = data.myKey;
+        }
     
 
    return (
@@ -155,7 +173,8 @@ function Main()
                {" "}
                add/update{" "}
              </Button>
-             <Button
+             <Button 
+               ref = {clearButtonRef}
                type="reset"
                className="text-uppercase  btn-outline-warning"
                variant="none"
@@ -167,7 +186,7 @@ function Main()
            </Form>
          </Col>
          <Col>
-           <ListTasks className="list-border" task = {task} week = {week}/>
+           <ListTasks className="list-border" task = {task} week = {week}  clearButtonRef = {clearButtonRef} clearBoundedElements = {clearBoundedElements} populate = {populate}/>
          </Col>
        </Row>
      </Container>
