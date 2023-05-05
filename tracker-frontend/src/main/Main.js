@@ -12,6 +12,9 @@ import { useState } from "react";
 import moment from 'moment';
 import { useRef } from "react";
 import $ from 'jquery';
+import  properties  from "./messageProperties";
+import { useContext } from "react";
+import {prjContext} from '../App';
 
 function Main() 
 {
@@ -63,17 +66,17 @@ function Main()
           let error = "Missing info:";
           if (task.name.trim() === "") {
             result = false;
-            error += " [Task Name]";
+            error += properties.missingName;
           }
         
           if (task.hour === '0' && task.min === '0') {
             result = false;
-            error += " [Time Spent]";
+            error += properties.missingTime;
           }
         
           if (selectedDate === "") {
             result = false;
-            error += " [Date]";
+            error += properties.missingDate;
           }
           if (!result) {
             alert(error);
@@ -98,10 +101,11 @@ function Main()
           task.myKey = data.myKey;
         }
     
+        const identifer = useContext(prjContext);
 
    return (
      <Container>
-       <Header version="1.0" className="general-border" />
+       <Header version= {"1.0" + identifer} className="general-border" />
        <Row>
          <Col>
            <Form onSubmit={update}>

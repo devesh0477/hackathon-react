@@ -5,6 +5,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col'; 
 import { useEffect, useState } from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
+import properties from './messageProperties';
 
 const ListTasks = (props) => {  
       
@@ -14,10 +15,14 @@ const ListTasks = (props) => {
       {
             const newTasks = updateMatchingRow ();
             setTasks(newTasks);
-            // console.log('count:' + newTasks.length + ' ' + newTasks[0].name + ' ' + newTasks[0].hour + ' ' + newTasks[0].min + ' ' + newTasks[0].comment);
-                      
+            clearSelection();                   
       }
       }, [props.task]);
+
+      const clearSelection = () =>
+      {
+            setSelectedRowHighlighted('');
+      }
 
       const updateMatchingRow = () =>
       {
@@ -55,7 +60,7 @@ const ListTasks = (props) => {
             const week = props.week;
             const id = weekId !== "undefined" ? weekId : 0;
           
-            fetch("http://localhost:8500/tracker/api/save", {
+            return fetch("http://localhost:8500/tracker/api/save", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -69,11 +74,16 @@ const ListTasks = (props) => {
               })
               .then((data) => {
                    setWeekId(data);
-                  //  alert('It is working ' + data);
+                  setATimedMessage(data);
                   }
                    )
               .catch((error) => alert(error));
           };
+          
+          const removeRow = () => {
+            tasks.splice(selectedRowHighlighted,1);
+            setSelectedRowHighlighted(-1);
+          }
 
           const load = (e) => {
             if (
@@ -103,8 +113,7 @@ const ListTasks = (props) => {
           };
 
           const close = (event) => {
-            save(event);
-            clear();
+            save(event).then(data => clear());
           }
 
           const clear = () =>
@@ -116,12 +125,20 @@ const ListTasks = (props) => {
           }
 
           const[selectedRowHighlighted, setSelectedRowHighlighted] = useState('');
+
+          const [message, setMessage] = useState('');
+
+          const setATimedMessage = (id) => {
+            const msg = properties.savedData.replace("[0]",`[${id}]`);
+            setMessage(msg);
+            setTimeout( () => {setMessage('');},3000);
+          }
     
 
     return (
         
         <Container className={props.className}>
-
+         <div className="messageArea">{message}</div>   
         <div style={{ height: '260px', overflowY: 'scroll' }}>
           <ListGroup>
            {
@@ -135,6 +152,7 @@ const ListTasks = (props) => {
                               }
                         }
                         onDoubleClick={() => {props.populate(text); setSelectedRowHighlighted(index)}}
+                        onClick={() => setSelectedRowHighlighted(index)}
                         key={index}>{text.name}-{text.hour}:{text.min}[{text.comment}] 
                        </ListGroup.Item>)
                  )
@@ -160,7 +178,7 @@ const ListTasks = (props) => {
               </Button>
               </Col>
         <Col>
-         <Button className="text-uppercase btn-outline-danger  btn-sm gap"  variant='none' >
+         <Button className="text-uppercase btn-outline-danger  btn-sm gap"  variant='none' onClick={removeRow} >
               remove
         </Button>
         </Col>
